@@ -1,85 +1,35 @@
-'use strict';
-
+var Alexa = require('alexa-sdk');
 var request = require('request');
+var AlexaDeviceAddressClient = require('./AlexaDeviceAddressClient');
 
-// Route the incoming request based on type (LaunchRequest, IntentRequest,
-// etc.) The JSON body of the request is provided in the event parameter.
-exports.handler = function (event, context) {
-    try {
-        //console.log("event.session.application.applicationId=" + event.session.application.applicationId);
 
-        //Uncomment this if statement and populate with your skill's application ID to
-        //prevent someone else from configuring a skill that sends requests to this function.
-		if (event.session.application.applicationId !== "amzn1.ask.skill.f72b8e78-0918-4644-ba88-e178c253e8ea") {
-			context.fail("Invalid Application ID");
-		 }
-
-        if (event.session.new) {
-            onSessionStarted({requestId: event.request.requestId}, event.session);
-        }
-
-        if (event.request.type === "LaunchRequest") {
-            onLaunch(event.request,
-                event.session,
-                function callback(sessionAttributes, speechletResponse) {
-                    context.succeed(buildResponse(sessionAttributes, speechletResponse));
-                });
-        } else if (event.request.type === "IntentRequest") {
-            onIntent(event.request, event.session, function callback(sessionAttributes, speechletResponse) {
-                    context.succeed(buildResponse(sessionAttributes, speechletResponse));
-                });
-        } else if (event.request.type === "SessionEndedRequest") {
-            onSessionEnded(event.request, event.session);
-            context.succeed();
-        }
-    } catch (e) {
-        context.fail("Exception: " + e);
-    }
+exports.handler = function(event, context, callback){
+    var alexa = Alexa.handler(event, context, callback);
+	
+	//register intent handlers:
+	alexa.registerHandlers(handlers);
+	
+	alexa.execute();
+	
 };
 
+var handlers = {
+	'TideTimes': function () {		
+		var address = getAddressHandler();
+		this.emit(':tell', address);
+		
+		//var that = this;
+		
+		//get tide times & return string:
+		//getTideTimes(function(tideTimes){
+		//	//console.log("tideTimes = " + currentTideTimes);
+		//	that.emit(':tell', tideTimes);
+		//});
+	}
+};
 
-//Called when the session starts.
-function onSessionStarted(sessionStartedRequest, session) {
-    //console.log("onSessionStarted requestId=" + sessionStartedRequest.requestId + ", sessionId=" + session.sessionId);
-
-    // add any session init logic here
-}
-
-//Called when the user invokes the skill without specifying what they want.
-function onLaunch(launchRequest, session, callback) {
-    //console.log("onLaunch requestId=" + launchRequest.requestId + ", sessionId=" + session.sessionId);
-
-    var cardTitle = "Tide Times";
-    var speechOutput = "You can ask Tide Times to give you the low and high tide times for today at your location";
-    callback(session.attributes, buildSpeechletResponse(cardTitle, speechOutput, "", true));
-}
-
-
-//Called when the user specifies an intent for this skill.
-function onIntent(intentRequest, session, callback) {
-    console.log("onIntent requestId=" + intentRequest.requestId + ", sessionId=" + session.sessionId);
-
-    var intent = intentRequest.intent;
-    var intentName = intentRequest.intent.name;
-
-    // dispatch custom intents to handlers here
-    if (intentName == 'TideTimes') {
-        handleTideTimesRequest(intent, session, callback);
-    }
-    else {
-        throw "Invalid intent";
-    }
-}
-
-
-//Called when the user ends the session.
-//Is not called when the skill returns shouldEndSession=true.
-function onSessionEnded(sessionEndedRequest, session) {
-    //console.log("onSessionEnded requestId=" + sessionEndedRequest.requestId + ", sessionId=" + session.sessionId);
-    // Add any cleanup logic here
-}
-
-function handleTideTimesRequest(intent, session, callback) {
+function getTideTimes(callback) {
+	//console.log("getTideTimes");
 	//get current date in seconds for tide API call:
 	//var date = new Date();
 	//var seconds = Math.round(date.getTime() / 1000);
@@ -97,16 +47,23 @@ function handleTideTimesRequest(intent, session, callback) {
 		method: "GET",
 		json:true,
 	}, function (error, response){
-		
-		//parse low/high tide times from first two extremes:
-		var firstTide = getTideAndTime(response.body.extremes[0]);
-		var secondTide = getTideAndTime(response.body.extremes[1]);
-		//construct outpust phrasing strings:
-		firstTide = firstTide.tideType + " tide is at " + firstTide.tideTime;
-		secondTide = secondTide.tideType + " tide is at " + secondTide.tideTime;
-		
-		//make callback response:
-		callback(session.attributes, buildSpeechletResponseWithoutCard("Today " + firstTide + ", " + secondTide, "", "true"));
+		if(error) {
+			return "Error, no tide times available.";
+		}
+		else {
+			//parse low/high tide times from first two extremes:
+			var firstTide = getTideAndTime(response.body.extremes[0]);
+			var secondTide = getTideAndTime(response.body.extremes[1]);
+			//construct outpust phrasing strings:
+			firstTide = firstTide.tideType + " tide is at " + firstTide.tideTime;
+			secondTide = secondTide.tideType + " tide is at " + secondTide.tideTime;
+
+			//make response:			
+			var tideTimesString = "Today " + firstTide + ", " + secondTide;
+			//console.log("TTS = " + tideTimesString);
+			
+			callback(tideTimesString);
+		}
 	});
 }
 
@@ -123,47 +80,61 @@ function getTideAndTime(tideObject) {
 			tideTime : tideTime};
 }
 
-function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
-    return {
-        outputSpeech: {
-            type: "PlainText",
-            text: output
-        },
-        card: {
-            type: "Simple",
-            title: title,
-            content: output
-        },
-        reprompt: {
-            outputSpeech: {
-                type: "PlainText",
-                text: repromptText
-            }
-        },
-        shouldEndSession: shouldEndSession
-    };
-}
+function getAddressHandler() {
+	try {
+			const consentToken = this.event.context.System.user.permissions.consentToken;
+		} catch (e) {
+			return "Belfast";
+		}
 
-function buildSpeechletResponseWithoutCard(output, repromptText, shouldEndSession) {
-    return {
-        outputSpeech: {
-            type: "PlainText",
-            text: output
-        },
-        reprompt: {
-            outputSpeech: {
-                type: "PlainText",
-                text: repromptText
-            }
-        },
-        shouldEndSession: shouldEndSession
-    };
-}
+    // If we have not been provided with a consent token, this means that the user has not
+    // authorized your skill to access this information. In this case, you should prompt them
+    // that you don't have permissions to retrieve their address.
+    if(!consentToken) {
+        this.emit(":tellWithPermissionCard", Messages.NOTIFY_MISSING_PERMISSIONS, PERMISSIONS);
 
-function buildResponse(sessionAttributes, speechletResponse) {
-    return {
-        version: "1.0",
-        sessionAttributes: sessionAttributes,
-        response: speechletResponse
-    };
+        // Lets terminate early since we can't do anything else.
+        //console.log("User did not give us permissions to access their address.");
+        //console.info("Ending getAddressHandler()");
+        return;
+    }
+
+    const deviceId = this.event.context.System.device.deviceId;
+    const apiEndpoint = this.event.context.System.apiEndpoint;
+
+    const alexaDeviceAddressClient = new AlexaDeviceAddressClient(apiEndpoint, deviceId, consentToken);
+    let deviceAddressRequest = alexaDeviceAddressClient.getFullAddress();
+
+    deviceAddressRequest.then((addressResponse) => {
+        switch(addressResponse.statusCode) {
+            case 200:
+                //console.log("Address successfully retrieved, now responding to user.");
+                const address = addressResponse.address;
+
+                const ADDRESS_MESSAGE = Messages.ADDRESS_AVAILABLE +
+                    `${address['addressLine1']}, ${address['stateOrRegion']}, ${address['postalCode']}`;
+
+                this.emit(":tell", ADDRESS_MESSAGE);
+                break;
+            case 204:
+                // This likely means that the user didn't have their address set via the companion app.
+                console.log("Successfully requested from the device address API, but no address was returned.");
+                this.emit(":tell", Messages.NO_ADDRESS);
+                break;
+            case 403:
+                console.log("The consent token we had wasn't authorized to access the user's address.");
+                this.emit(":tellWithPermissionCard", Messages.NOTIFY_MISSING_PERMISSIONS, PERMISSIONS);
+                break;
+            default:
+                this.emit(":ask", Messages.LOCATION_FAILURE, Messages.LOCATION_FAILURE);
+        }
+
+        //console.info("Ending getAddressHandler()");
+    });
+
+    deviceAddressRequest.catch((error) => {
+        this.emit(":tell", Messages.ERROR);
+        console.error(error);
+        console.info("Ending getAddressHandler()");
+    });
 }

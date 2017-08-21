@@ -1,0 +1,24 @@
+{
+  "name": "tidetime",
+  "version": "1.0.0",
+  "description": "Alexa Skill for recalling the current tide times for the day.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cfyans/tideTime.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cfyans/tideTime/issues"
+  },
+  "homepage": "https://github.com/cfyans/tideTime#readme",
+  "dependencies": {
+    "alexa-sdk": "^1.0.12",
+    "https": "^1.0.0",
+    "request": "^2.81.0"
+  }
+}

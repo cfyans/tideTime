@@ -1,5 +1,7 @@
 var Alexa = require('alexa-sdk');
 var request = require('request');
+var NodeGeocoder = require('node-geocoder');
+
 var AlexaDeviceAddressClient = require('./AlexaDeviceAddressClient');
 
 
@@ -25,10 +27,49 @@ var handlers = {
 		//	//console.log("tideTimes = " + currentTideTimes);
 		//	that.emit(':tell', tideTimes);
 		//});
+	},
+	'TideTimesLocation': function () {
+		var location = this.event.request.intent.slots.location.value;
+		//this.emit(':tell', location);
+		var that = this;
+		getLatLongFromLocation(location, function(locationDetails){
+			
+			var outputString = locationDetails.latitude + " " + locationDetails.longitude + " " + locationDetails.city + " " + locationDetails.country;
+			
+			getTideTimes(locationDetails, function(tideTimes){
+				var outputString = tideTimes + " In " + locationDetails.city + ", " + locationDetails.country;
+				that.emit(':tell', outputString);
+			});
+		});
 	}
 };
 
-function getTideTimes(callback) {
+function getLatLongFromLocation(location, callback) {
+	var geocoderOpts = {
+		provider: 'google',
+		httpAdapter: 'https',
+	};
+
+	var geocoder = NodeGeocoder(geocoderOpts);
+	
+	geocoder.geocode(location, function ( err, data ) {
+		if(err) {
+			callback(null);
+		}
+		else {
+			locationDetails = {};
+			locationDetails.latitude = data[0].latitude;
+			locationDetails.longitude = data[0].longitude;
+			if(data[0].city) locationDetails.city = data[0].city;
+			else locationDetails.city = location;
+			locationDetails.country = data[0].country;
+			
+			callback(locationDetails);
+		}		
+	});
+}
+
+function getTideTimes(locationDetails, callback) {
 	//console.log("getTideTimes");
 	//get current date in seconds for tide API call:
 	//var date = new Date();
@@ -38,8 +79,12 @@ function getTideTimes(callback) {
 	var apiURL = "https://www.worldtides.info/api";
 	var apiKey = "&key=0280cdbe-614c-4382-b192-322871397487";
 	var params = "?extremes" +
-					"&lat=54.579269" +
-					"&lon=-5.640846";
+					"&lat=" + locationDetails.latitude +
+					"&lon=" + locationDetails.longitude;
+
+	//var params = "?extremes" +
+	//				"&lat=54.579269" +
+	//				"&lon=-5.640846";
 
 	//make tide API request:					
 	request({

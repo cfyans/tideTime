@@ -6,16 +6,13 @@ var request = require('request');
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = function (event, context) {
     try {
-        console.log("event.session.application.applicationId=" + event.session.application.applicationId);
+        //console.log("event.session.application.applicationId=" + event.session.application.applicationId);
 
-        /**
-         * Uncomment this if statement and populate with your skill's application ID to
-         * prevent someone else from configuring a skill that sends requests to this function.
-         */
-		 
-//     if (event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.05aecccb3-1461-48fb-a008-822ddrt6b516") {
-//         context.fail("Invalid Application ID");
-//      }
+        //Uncomment this if statement and populate with your skill's application ID to
+        //prevent someone else from configuring a skill that sends requests to this function.
+		if (event.session.application.applicationId !== "amzn1.ask.skill.f72b8e78-0918-4644-ba88-e178c253e8ea") {
+			context.fail("Invalid Application ID");
+		 }
 
         if (event.session.new) {
             onSessionStarted({requestId: event.request.requestId}, event.session);
@@ -28,9 +25,7 @@ exports.handler = function (event, context) {
                     context.succeed(buildResponse(sessionAttributes, speechletResponse));
                 });
         } else if (event.request.type === "IntentRequest") {
-            onIntent(event.request,
-                event.session,
-                function callback(sessionAttributes, speechletResponse) {
+            onIntent(event.request, event.session, function callback(sessionAttributes, speechletResponse) {
                     context.succeed(buildResponse(sessionAttributes, speechletResponse));
                 });
         } else if (event.request.type === "SessionEndedRequest") {
@@ -42,94 +37,76 @@ exports.handler = function (event, context) {
     }
 };
 
-/**
- * Called when the session starts.
- */
+
+//Called when the session starts.
 function onSessionStarted(sessionStartedRequest, session) {
-    console.log("onSessionStarted requestId=" + sessionStartedRequest.requestId
-        + ", sessionId=" + session.sessionId);
+    //console.log("onSessionStarted requestId=" + sessionStartedRequest.requestId + ", sessionId=" + session.sessionId);
 
     // add any session init logic here
 }
 
-/**
- * Called when the user invokes the skill without specifying what they want.
- */
+//Called when the user invokes the skill without specifying what they want.
 function onLaunch(launchRequest, session, callback) {
-    console.log("onLaunch requestId=" + launchRequest.requestId
-        + ", sessionId=" + session.sessionId);
+    //console.log("onLaunch requestId=" + launchRequest.requestId + ", sessionId=" + session.sessionId);
 
-    var cardTitle = "Hello, World!"
-    var speechOutput = "You can tell Hello, World! to say Hello, World!"
-    callback(session.attributes,
-        buildSpeechletResponse(cardTitle, speechOutput, "", true));
+    var cardTitle = "Tide Times";
+    var speechOutput = "You can ask Tide Times to give you the low and high tide times for today at your location";
+    callback(session.attributes, buildSpeechletResponse(cardTitle, speechOutput, "", true));
 }
 
-/**
- * Called when the user specifies an intent for this skill.
- */
-function onIntent(intentRequest, session, callback) {
-    console.log("onIntent requestId=" + intentRequest.requestId
-        + ", sessionId=" + session.sessionId);
 
-    var intent = intentRequest.intent,
-        intentName = intentRequest.intent.name;
+//Called when the user specifies an intent for this skill.
+function onIntent(intentRequest, session, callback) {
+    console.log("onIntent requestId=" + intentRequest.requestId + ", sessionId=" + session.sessionId);
+
+    var intent = intentRequest.intent;
+    var intentName = intentRequest.intent.name;
 
     // dispatch custom intents to handlers here
-    if (intentName == 'TestIntent') {
-        handleTestRequest(intent, session, callback);
+    if (intentName == 'TideTimes') {
+        handleTideTimesRequest(intent, session, callback);
     }
     else {
         throw "Invalid intent";
     }
 }
 
-/**
- * Called when the user ends the session.
- * Is not called when the skill returns shouldEndSession=true.
- */
-function onSessionEnded(sessionEndedRequest, session) {
-    console.log("onSessionEnded requestId=" + sessionEndedRequest.requestId
-        + ", sessionId=" + session.sessionId);
 
+//Called when the user ends the session.
+//Is not called when the skill returns shouldEndSession=true.
+function onSessionEnded(sessionEndedRequest, session) {
+    //console.log("onSessionEnded requestId=" + sessionEndedRequest.requestId + ", sessionId=" + session.sessionId);
     // Add any cleanup logic here
 }
 
-function handleTestRequest(intent, session, callback) {
-	var date = new Date();
-	var seconds = Math.round(date.getTime() / 1000);
+function handleTideTimesRequest(intent, session, callback) {
+	//get current date in seconds for tide API call:
+	//var date = new Date();
+	//var seconds = Math.round(date.getTime() / 1000);
 	
+	//params for tide API call:
 	var apiURL = "https://www.worldtides.info/api";
 	var apiKey = "&key=0280cdbe-614c-4382-b192-322871397487";
 	var params = "?extremes" +
 					"&lat=54.579269" +
 					"&lon=-5.640846";
-					
+
+	//make tide API request:					
 	request({
 		url: apiURL + params + apiKey,
 		method: "GET",
 		json:true,
 	}, function (error, response){
 		
-		//var firstTide = "no tide information";
-		//var tideType = response.body.extremes[0].type;
-		//var tideTime = "no time information";
-		//
-		//var dateTime = new Date(0); // The 0 there is the key, which sets the date to the epoch
-		//dateTime.setUTCSeconds(response.body.extremes[0].dt);
-		//dateTime = dateTime.toTimeString();
-		//dateTime = dateTime.split(" ");
-		//tideTime = dateTime[0];
-
+		//parse low/high tide times from first two extremes:
 		var firstTide = getTideAndTime(response.body.extremes[0]);
 		var secondTide = getTideAndTime(response.body.extremes[1]);
-		
+		//construct outpust phrasing strings:
 		firstTide = firstTide.tideType + " tide is at " + firstTide.tideTime;
 		secondTide = secondTide.tideType + " tide is at " + secondTide.tideTime;
 		
-		
-		callback(session.attributes,
-        buildSpeechletResponseWithoutCard("Today " + firstTide + ", " + secondTide, "", "true"));
+		//make callback response:
+		callback(session.attributes, buildSpeechletResponseWithoutCard("Today " + firstTide + ", " + secondTide, "", "true"));
 	});
 }
 
@@ -145,8 +122,6 @@ function getTideAndTime(tideObject) {
 	return {tideType : tideType,
 			tideTime : tideTime};
 }
-
-// ------- Helper functions to build responses -------
 
 function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
     return {

@@ -1,6 +1,9 @@
 TideTimesLocation tide time {location}
+TideTimesLocation tides {location}
 TideTimesLocation tide times {location}
 TideTimesLocation what are the tide times in {location}
 TideTimesLocation what time are the tides in {location}
 TideTimesLocation tell me the tide times in {location}
 TideTimesLocation tell me the tides in {location}
+TideTimesLocation what are the tides in {location}
+TideTimesLocation what time are the tides in {location}

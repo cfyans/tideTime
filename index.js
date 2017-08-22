@@ -18,8 +18,10 @@ exports.handler = function(event, context, callback){
 var handlers = {
 	'TideTimes': function () {		
 		var address = getAddressHandler();
-		this.emit(':tell', address);
-		
+		if(address == -1) this.emit(':tell', "No location information");
+		else {
+			this.emit(':tell', address);
+		}
 		//var that = this;
 		
 		//get tide times & return string:
@@ -69,12 +71,7 @@ function getLatLongFromLocation(location, callback) {
 	});
 }
 
-function getTideTimes(locationDetails, callback) {
-	//console.log("getTideTimes");
-	//get current date in seconds for tide API call:
-	//var date = new Date();
-	//var seconds = Math.round(date.getTime() / 1000);
-	
+function getTideTimes(locationDetails, callback) {	
 	//params for tide API call:
 	var apiURL = "https://www.worldtides.info/api";
 	var apiKey = "&key=0280cdbe-614c-4382-b192-322871397487";

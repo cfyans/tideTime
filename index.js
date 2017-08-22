@@ -129,7 +129,7 @@ function getAddressHandler() {
 	try {
 			const consentToken = this.event.context.System.user.permissions.consentToken;
 		} catch (e) {
-			return "Belfast";
+			return -1;
 		}
 
     // If we have not been provided with a consent token, this means that the user has not

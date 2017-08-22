@@ -4,6 +4,7 @@ var NodeGeocoder = require('node-geocoder');
 
 var AlexaDeviceAddressClient = require('./AlexaDeviceAddressClient');
 
+var helpMessage = "You can ask Tides for the tide times at a location, for example, what are the tide times in Belfast.";
 
 exports.handler = function(event, context, callback){
     var alexa = Alexa.handler(event, context, callback);
@@ -16,33 +17,41 @@ exports.handler = function(event, context, callback){
 };
 
 var handlers = {
-	'TideTimes': function () {		
-		var address = getAddressHandler();
-		if(address == -1) this.emit(':tell', "No location information");
-		else {
-			this.emit(':tell', address);
-		}
-		//var that = this;
-		
-		//get tide times & return string:
-		//getTideTimes(function(tideTimes){
-		//	//console.log("tideTimes = " + currentTideTimes);
-		//	that.emit(':tell', tideTimes);
-		//});
-	},
+	'Unhandled': function () {
+        this.emit(':tell', helpMessage);
+    },
+	//'TideTimes': function () {		
+	//	var address = getAddressHandler();
+	//	if(address == -1) this.emit(':tell', "No location information");
+	//	else {
+	//		this.emit(':tell', address);
+	//	}
+	//	//var that = this;
+	//	
+	//	//get tide times & return string:
+	//	//getTideTimes(function(tideTimes){
+	//	//	//console.log("tideTimes = " + currentTideTimes);
+	//	//	that.emit(':tell', tideTimes);
+	//	//});
+	//},
 	'TideTimesLocation': function () {
-		var location = this.event.request.intent.slots.location.value;
-		//this.emit(':tell', location);
+		var location = "";
 		var that = this;
-		getLatLongFromLocation(location, function(locationDetails){
-			
-			var outputString = locationDetails.latitude + " " + locationDetails.longitude + " " + locationDetails.city + " " + locationDetails.country;
-			
-			getTideTimes(locationDetails, function(tideTimes){
-				var outputString = tideTimes + " In " + locationDetails.city + ", " + locationDetails.country;
-				that.emit(':tell', outputString);
+		
+		if(this.event.request.intent.slots.location.value) {
+			location = this.event.request.intent.slots.location.value;
+			getLatLongFromLocation(location, function(locationDetails){
+				//var outputString = locationDetails.latitude + " " + locationDetails.longitude + " " + locationDetails.city + " " + locationDetails.country;
+				getTideTimes(locationDetails, function(tideTimes){
+					var outputString = tideTimes + " In " + locationDetails.city + ", " + locationDetails.country;
+					that.emit(':tell', outputString);
+				});
 			});
-		});
+
+		}
+		else {
+			this.emit(':tell', "No Location found");
+		}
 	}
 };
 

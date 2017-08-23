@@ -1,7 +1,7 @@
 {
   "intents": [
     {
-      "intent": "TideTimes"
+      "intent": "TideTime"
     },
     {
       "slots": [
@@ -10,7 +10,7 @@
           "type": "LOCATIONS"
         }
       ],
-      "intent": "TideTimesLocation"
+      "intent": "TideTimeLocation"
     }
   ]
 }

@@ -18,7 +18,7 @@ exports.handler = function(event, context, callback){
 
 var handlers = {
 	'Unhandled': function () {
-        this.emit(':tell', helpMessage);
+        this.emit(':ask', helpMessage);
     },
 	//'TideTimes': function () {		
 	//	var address = getAddressHandler();
@@ -34,7 +34,7 @@ var handlers = {
 	//	//	that.emit(':tell', tideTimes);
 	//	//});
 	//},
-	'TideTimesLocation': function () {
+	'TideTimeLocation': function () {
 		var location = "";
 		var that = this;
 		

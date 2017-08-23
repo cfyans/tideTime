@@ -1,13 +1,13 @@
-TideTimesLocation for the tide time in {location}
-TideTimesLocation for the tide times in {location}
-TideTimesLocation for the tide time at {location}
-TideTimesLocation for the tide times at {location}
-TideTimesLocation what are the tide times in {location}
-TideTimesLocation what are the tide times at {location}
-TideTimesLocation what time are the tides in {location}
-TideTimesLocation to tell me the tide times in {location}
-TideTimesLocation to tell me the tides in {location}
-TideTimesLocation what are the tides in {location}
-TideTimesLocation what time are the tides in {location}
-TideTimesLocation for the tides in {location}
-TideTimesLocation for tides in {location}
+TideTimeLocation for the tide time in {location}
+TideTimeLocation for the tide times in {location}
+TideTimeLocation for the tide time at {location}
+TideTimeLocation for the tide times at {location}
+TideTimeLocation what are the tide times in {location}
+TideTimeLocation what are the tide times at {location}
+TideTimeLocation what time are the tides in {location}
+TideTimeLocation to tell me the tide times in {location}
+TideTimeLocation to tell me the tides in {location}
+TideTimeLocation what are the tides in {location}
+TideTimeLocation what time are the tides in {location}
+TideTimeLocation for the tides in {location}
+TideTimeLocation for tides in {location}

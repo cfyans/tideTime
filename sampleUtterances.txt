@@ -5,10 +5,9 @@ TideTimesLocation for the tide times at {location}
 TideTimesLocation what are the tide times in {location}
 TideTimesLocation what are the tide times at {location}
 TideTimesLocation what time are the tides in {location}
-TideTimesLocation tell me the tide times in {location}
-TideTimesLocation tell me the tides in {location}
+TideTimesLocation to tell me the tide times in {location}
+TideTimesLocation to tell me the tides in {location}
 TideTimesLocation what are the tides in {location}
 TideTimesLocation what time are the tides in {location}
 TideTimesLocation for the tides in {location}
-TideTimesLocation for the tide times in {location}
 TideTimesLocation for tides in {location}

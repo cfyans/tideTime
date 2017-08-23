@@ -13,12 +13,11 @@ exports.handler = function(event, context, callback){
 	alexa.registerHandlers(handlers);
 	
 	alexa.execute();
-	
 };
 
 var handlers = {
 	'Unhandled': function () {
-        this.emit(':ask', helpMessage);
+        this.emit(':ask', helpMessage, "Try that now");
     },
 	//'TideTimes': function () {		
 	//	var address = getAddressHandler();
